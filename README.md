@@ -21,8 +21,20 @@ with some pre-define appliances that we're commonly use in daily life.
   - I mostly googling stuff how to do ... and first result that came is written by AI, So i use as reference NOT just copy and paste
 - This project not base on any Tutorial i don't know many may exist but i proudly say that I make it myself
 
-### This project made for CS50 Final project
+### Want to clone this project?
 
+This project build with dev container you can clone and rebuilding and basic config file should be ready-to-use\
+Additional step after finishing clone & finish setup dev container
+1. Create .env file to update secret Key
+  - in that .env file you should add to any line
+    - > FLASK_SECRET_KEY=you_whatever_secret_key_here\
+      > you can use ```python -c 'import secrets; print(secrets.token_hex(16))'``` to generate to secrets key for you
+2. Make sure all dependency in requirements.txt install correctly if you notice something weird in code like can't import flask etc.
+  - try ``` pip install -r requirements.txt && pip install python-dotenv ```
+3. Make sure database.db work correctly, If it not...
+  - try ``` sqlite3 project/database.db < project/schema.sql ``` or manually create sqlite3 database.db in same folder as app.py then create table as you can see in schema.sql
+
+### This project made for CS50 Final project
 
 ![Project Demo Image](https://github.com/Tong-ST/elec-calor/blob/main/project/static/img/elec_calor_home_img.png)
 
