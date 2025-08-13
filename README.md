@@ -24,7 +24,7 @@ with some pre-define appliances that we're commonly use in daily life.
 ### This project made for CS50 Final project
 
 
-![Project Demo Image](https://github.com/Tong-ST/small_project/blob/main/project/static/img/elec_calor_home_img.png)
+![Project Demo Image](https://github.com/Tong-ST/elec-calor/blob/main/project/static/img/elec_calor_home_img.png)
 
 ### More references
 
