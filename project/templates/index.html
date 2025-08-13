@@ -1,0 +1,224 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home Page
+{% endblock %}
+
+{% block main %}
+<div class="d-flex align-items-center mb-4">
+    <h1 class="mb-0">Start calculate appliances</h1>
+    <div class="me-auto"></div>
+    <div class="col-sm-2">
+        <form action="/" method="post" class="d-flex flex-column align-items-end" >
+            <div class="col-auto">
+            <select class="form-select" name="location_rate" id="dropdown_location">
+                {% for location in location_array %}
+                    <option data-value="{{location.2}}" value="{{location.0}}" 
+                    {% if location.0 == current_location %}
+                        selected
+                    {% endif %}
+                    >{{location.1}}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+            <label for="charge_rate" class="form-label">Charge per Unit</label>
+            <input class="form-control w-auto mb-2" id="charge_rate" name="charge_rate" placeholder="Charge per kWh" step="0.0001" min="0.0001" max="9999.9999" value="{{ update_charge }}" type="number" required>
+            <button class="btn btn-primary" type="submit">Update Charge Rate</button>
+        </form>
+    </div>
+</div>
+<p style="text-align:left; font-size:1rem;">Add your appliances information below</p>
+<form action="/" method="post" class="mb-4">
+    <div class="row g-2 align-items-end" style="flex-wrap:inherit">
+        <div class="col-auto">
+            <label for="dropdown_type" class="form-label mb-0">Appliance Type</label>
+            <select class="form-select" name="app_type" id="dropdown_type">
+                {% for app in jinja_array %}
+                    <option value="{{app.0}}">{{app.1}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="app_name" class="form-label mb-0">Appliance Name</label>
+            <input autofocus class="form-control" id="app_name" name="app_name" placeholder="Appliance" type="text" required>
+        </div>
+        <div class="col-auto">
+            <label for="amount" class="form-label mb-0">Amount</label>
+            <input class="form-control" id="amount" name="amount" placeholder="Amount" min="1" value="1" max="100" type="number" required>
+        </div>
+        <div class="col-auto">
+            <label for="input_power" class="form-label mb-0">Power Usage (watt)</label>
+            <input class="form-control" id="input_power" name="power_usage" placeholder="Watt" min="1" max="1000000" type="number" required>
+        </div>
+        <div class="col-auto">
+            <label for="usage_per_day" class="form-label mb-0">Usage per day</label>
+            <input class="form-control" id="usage_per_day" name="usage_per_day" placeholder="Usage per day" min="1" type="number" required>
+        </div>
+        <div class="col-auto">
+            <label for="dropdown_usage" class="form-label mb-0">Usage Type</label>
+            <select class="form-select" name="usage_type" id="dropdown_usage">
+                <option value="Hour per day">Hour per Day</option>
+                <option value="Minute per day">Minute per Day</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="power_factor" class="form-label mb-0">Power Factor</label>
+            <input class="form-control" id="power_factor" name="power_factor" placeholder="Power factor" type="number" step="0.01" min="0.1" max="1" value="1" required>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary w-100" type="submit">Calculate</button>
+        </div>
+    </div>
+</form>
+
+<p style="text-align:left; font-size:12px;">*Power Factor (PF) is a measure of how efficiently an electrical device converts electric power from the wall into useful work (like spinning a fan or cooling a fridge) for normal appliances just leave it to 1.0</p>
+<p style="text-align:left; font-size:12px;">*Charge per Unit is electricity tariff rate per unit you can update appropriately per your country/state rate (Ex. you can update to 0.15 (15 cents) if you in X State) ***This calculate not include Taxes*** </p>
+<p style="text-align:left; font-size:12px;">*Formula i use in this calculator <b>Unit per day(kWh)</b> = ((Watt * PF) * amount / 1,000) * hour use per day</p>
+
+{% set calculated_length = calculated_data | length %}
+<div id="calculated_list" data-length="{{ calculated_data | length }}"></div>
+
+{% if calculated_length > 0 %}
+<div class="spacer"></div>
+<h2 class="mb-0">Calculated Data<div class="spacer"></div></h2>
+    <div class="me-auto"></div>
+    <table class="table table-striped align-middle" id='calculatedTable'>
+        <thead>
+            <tr>
+                <th class="text-start">Appliance</th>
+                <th class="text-end">Details</th>
+                <th class="text-end">Amount</th>
+                <th class="text-end">Unit/Day</th>
+                <th class="text-end">Cost/Day</th>
+                <th class="text-end">Cost/Month</th>
+                <th class="text-end">Cost/Year</th>
+                <th class="text-end"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set change_rate = update_charge %}
+            {% for app in calculated_data %}
+                {% set counter = loop.index %}
+                {% for k, v in app.items() %}
+                    <tr>
+                        <td class="text-start">{{ k }}</td>
+                        <td class="text-end">
+                            <div class="item_details" id="tool-tip-display{{ counter }}">
+                                Power Usage: {{ v.power_usage }} watt, {{ v.usage_per_day }} min/day, PF: {{ v.power_factor }}
+                            </div>
+                            <button class="btn btn-secondary" id="tool-tip{{ counter }}">Detail</button>
+                        </td>
+                        <td class="text-end">{{ v.amount }}</td>
+                        <td class="text-end">{{ v.unit_per_day | update_format }}</td>
+                        <td class="text-end">{{ (v.unit_per_day * change_rate) | update_format }}</td>
+                        <td class="text-end">{{ ((v.unit_per_day * change_rate) * 30) | update_format }}</td>
+                        <td class="text-end">{{ ((v.unit_per_day * change_rate) * 365) | update_format }}</td>
+                        
+                        
+                        {% set item_id_index = v.item_id %}
+                        {% if "user_id" not in session %}
+                            {% set item_id_index = v.session_item_id %}
+                        {% endif %}
+                        <td class="text-end">
+                            <form action="/delete" method="POST" class="d-inline">
+                                <input value="{{ item_id_index }}" name="my_item_id" type="hidden">
+                                <button id="remove_btn" type="submit" class="btn btn-secondary">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+        {% if calculated_length > 1 %}
+        <tfoot>
+            <tr>
+                <td class="text-start"><b>Sum Total</b></td>
+                <td class="text-end"></td>
+                <td class="text-end" id="totalAmount"></td>
+                <td class="text-end" id="totalUnitDay"></td>
+                <td class="text-end" id="totalCostDay"></td>
+                <td class="text-end" id="totalCostMonth"></td>
+                <td class="text-end" id="totalCostYear"></td>
+                <td class="text-end"></td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+    {% if calculated_length > 1 %}
+    <p style="text-align:left; font-size:12px;">*Sum Total meant to be just an overviews not the exact prediction since we mostly use each appliance dynamically</p>
+    {% endif %}
+    {% endif %}
+{% endblock %}
+{% block java_script %}
+<script>
+    var applianceArray = {{jinja_array | tojson | safe}};
+    var locationArray = {{location_array | tojson | safe}};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        let myApp = new Map();
+
+        // Turn app array to structure
+        for (let i = 0, appArraySize = applianceArray.length; i < appArraySize; i++)
+        {
+            let appType = applianceArray[i][0];
+            let appTypeName = applianceArray[i][1];
+            let powerUsage = applianceArray[i][2];
+            let usagePerDay = applianceArray[i][3];
+            let dropdownUsage = applianceArray[i][4];
+            let powerFactor = applianceArray[i][5];
+            
+            myApp.set(appType, {
+                name: appTypeName,
+                power_usage: powerUsage,
+                usage_per_day: usagePerDay,
+                dropdown_usage: dropdownUsage,
+                power_factor: powerFactor
+            });
+        }
+        
+        const dropdown_type = document.getElementById(`dropdown_type`);
+        const input_power = document.getElementById(`input_power`);
+        const app_name = document.getElementById(`app_name`);
+        const amount = document.getElementById(`amount`);
+        const power_factor = document.getElementById(`power_factor`);
+        const dropdown_usage = document.getElementById(`dropdown_usage`);
+        const usage_per_day = document.getElementById(`usage_per_day`);
+        
+        dropdown_type.addEventListener('change', function() {
+            const appType = dropdown_type.value.toLowerCase();
+            const appData = myApp.get(appType);
+            if (!appData) return;
+            input_power.value = appData.power_usage;
+            usage_per_day.value = appData.usage_per_day;
+            power_factor.value = appData.power_factor;
+            app_name.value = appData.name;
+            amount.value = 1;
+            dropdown_usage.value = appData.dropdown_usage;
+        });
+
+        // handle dropdown_location
+        let myLocation = new Map();
+        
+        for (let i = 0, locationArrSize = locationArray.length; i < locationArrSize; i++)
+        {
+            let location = locationArray[i][0];
+            let charge_rate = locationArray[i][2];
+            myLocation.set(location, {
+                chargeRate: charge_rate
+            });
+        } 
+
+        const dropdown_location = document.getElementById(`dropdown_location`);
+        const charge_rate = document.getElementById(`charge_rate`);
+    
+        dropdown_location.addEventListener('change', function () {
+            const locationValue = dropdown_location.value.toLowerCase();
+            const chargeData = myLocation.get(locationValue);
+            if (!chargeData) return;
+            charge_rate.value = chargeData.chargeRate;
+        });
+
+    });
+</script>
+ {% endblock %}
